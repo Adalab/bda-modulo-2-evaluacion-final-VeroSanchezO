@@ -114,7 +114,7 @@ SELECT rating AS clasificación, AVG(length) AS "promedio duración"
 -- 13. Encuentra el nombre y apellido de los actores que aparecen en la película con title "Indian Love".
 	-- tabla actor: first_name, last_name, actor_id
 	-- tabla film: title, flim_id
-	-- Tabla actor: actor_id, film_id
+	-- Tabla film_actor: actor_id, film_id
 
 SELECT a.first_name AS nombre, a.last_name AS apellido
 	FROM actor AS a
@@ -133,4 +133,53 @@ SELECT title
 	WHERE description REGEXP 'dog|cat';
 
 -- 15. Hay algún actor o actriz que no apareca en ninguna película en la tabla film_actor.
+	-- tabla actor: first_name, last_name
+	-- tabla film: title, flim_id
+    
+SELECT a.first_name AS nombre, a.last_name AS apellido
+	FROM actor AS a
+	LEFT JOIN film_actor AS fa 
+    USING (actor_id)
+	WHERE fa.film_id IS NULL;
 
+-- 16. Encuentra el título de todas las películas que fueron lanzadas entre el año 2005 y 2010.
+SELECT *
+	FROM film;
+    
+SELECT title AS películas
+	FROM film
+	WHERE release_year BETWEEN 2005 AND 2010;
+
+-- 17. Encuentra el título de todas las películas que son de la misma categoría que "Family".
+	-- Tabla film: title, film_id
+    -- Tabla film_category: film_id, category_id
+    -- Tabla category: name, category_id
+    
+SELECT f.title AS películas
+	FROM film AS f
+	INNER JOIN film_category fc 
+		USING (film_id)
+	INNER JOIN category AS c 
+		USING (category_id)
+	WHERE c.name = 'Family';
+
+-- 18. Muestra el nombre y apellido de los actores que aparecen en más de 10 películas.
+	-- Tabla actor: first_name, last_name, actor_id 
+    -- Tabla film_actor: actor_id
+
+SELECT first_name AS nombre, last_name AS apellido
+	FROM actor
+	WHERE actor_id IN (SELECT actor_id
+						FROM film_actor
+						GROUP BY actor_id
+						HAVING COUNT(film_id) > 10);
+
+-- 19. Encuentra el título de todas las películas que son "R" y tienen una duración mayor a 2 horas en la tabla film.
+SELECT *
+FROM film;
+
+SELECT title AS películas, length AS duración
+FROM film
+WHERE rating = 'R' AND length > 120; 
+
+-- 20. Encuentra las categorías de películas que tienen un promedio de duración superior a 120 minutos y muestra el nombre de la categoría junto con el promedio de duración.
