@@ -76,9 +76,8 @@ SELECT rating AS clasificación, COUNT(*) AS total_peliculas
 	GROUP BY rating;
  
 -- 10. Encuentra la cantidad total de películas alquiladas por cada cliente y muestra el ID del cliente, su nombre y apellido junto con la cantidad de películas alquiladas.
-
--- tabla customer: id_customer, first_name y last_name
--- tabla rental: rental_id
+	-- tabla customer: id_customer, first_name y last_name
+	-- tabla rental: rental_id
 /* NOTA: El count lo utilizo para contar solo las filas donde hay un alquiler. 
 INNER JOIN para unir customer y rental y asegurarme que solo me incluya los clientes que tienen al menos un alquiler en la tabla rental*/
 
@@ -87,4 +86,51 @@ SELECT c.customer_id AS id_cliente, c.first_name AS nombre, c.last_name AS apell
 	INNER JOIN rental AS r 
 		USING (customer_id)
 	GROUP BY c.customer_id, c.first_name, c.last_name;
+    
+-- 11. Encuentra la cantidad total de películas alquiladas por categoría y muestra el nombre de la categoría junto con el recuento de alquileres.
+	-- tabla category: name, category_id
+    -- tabla rental: rental_id, inventory_id
+    -- Tabla film_category: category_id, film_id
+    -- Tabla inventory: film_id, inventory_id
+
+SELECT c.name AS nombre_categoria, COUNT(r.rental_id) AS "recuento_alquileres"
+	FROM category AS c
+		INNER JOIN film_category AS fc
+			USING(category_id)
+		INNER JOIN inventory AS i
+			USING(film_id)
+		INNER JOIN rental AS r
+			USING(inventory_id)
+GROUP BY name;
+
+-- 12. Encuentra el promedio de duración de las películas para cada clasificación de la tabla film y muestra la clasificación junto con el promedio de duración.
+SELECT *
+	FROM film;
+    
+SELECT rating AS clasificación, AVG(length) AS "promedio duración"
+	FROM film
+	GROUP BY rating;
+
+-- 13. Encuentra el nombre y apellido de los actores que aparecen en la película con title "Indian Love".
+	-- tabla actor: first_name, last_name, actor_id
+	-- tabla film: title, flim_id
+	-- Tabla actor: actor_id, film_id
+
+SELECT a.first_name AS nombre, a.last_name AS apellido
+	FROM actor AS a
+	INNER JOIN film_actor AS fa 
+    USING (actor_id)
+	INNER JOIN film AS f
+    USING (film_id)
+	WHERE f.title = 'Indian Love';
+
+-- 14. Muestra el título de todas las películas que contengan la palabra "dog" o "cat" en su descripción.
+SELECT *
+	FROM film;
+    
+SELECT title
+	FROM film
+	WHERE description REGEXP 'dog|cat';
+
+-- 15. Hay algún actor o actriz que no apareca en ninguna película en la tabla film_actor.
 
