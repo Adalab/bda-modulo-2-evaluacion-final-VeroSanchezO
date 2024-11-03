@@ -22,7 +22,7 @@ SELECT title AS películas, rating AS clasificación
 -- 3. Encuentra el título y la descripción de todas las películas que contengan la palabra "amazing" en su descripción.
 SELECT *
 	FROM film;
-
+	-- Usé Like, porqué necesitaba buscar un patrón específico en una cadena de texto
 SELECT title AS películas, description AS descripción
 	FROM film 
 	WHERE description LIKE '%amazing%';
@@ -46,9 +46,9 @@ SELECT first_name AS "nombres de actores"
 SELECT *
 	FROM actor;
 
-SELECT CONCAT(first_name," ", last_name) AS "nombre y apellido"
-	FROM actor
-    WHERE first_name LIKE "Gibson";
+SELECT first_name AS nombre, last_name AS apellido
+FROM actor
+WHERE last_name LIKE "Gibson";
 
 -- 7. Encuentra los nombres de los actores que tengan un actor_id entre 10 y 20.
 SELECT *
