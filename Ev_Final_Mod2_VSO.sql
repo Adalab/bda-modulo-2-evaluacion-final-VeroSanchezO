@@ -103,7 +103,9 @@ SELECT c.name AS nombre_categoria, COUNT(r.rental_id) AS "recuento_alquileres"
 			USING(inventory_id)
 GROUP BY name;
 
--- 12. Encuentra el promedio de duración de las películas para cada clasificación de la tabla film y muestra la clasificación junto con el promedio de duración.
+/* 12. Encuentra el promedio de duración de las películas para cada clasificación de la tabla film y muestra la 
+clasificación junto con el promedio de duración. */
+
 SELECT *
 	FROM film;
     
@@ -119,9 +121,9 @@ SELECT rating AS clasificación, AVG(length) AS "promedio duración"
 SELECT a.first_name AS nombre, a.last_name AS apellido
 	FROM actor AS a
 	INNER JOIN film_actor AS fa 
-    USING (actor_id)
+		USING (actor_id)
 	INNER JOIN film AS f
-    USING (film_id)
+		USING (film_id)
 	WHERE f.title = 'Indian Love';
 
 -- 14. Muestra el título de todas las películas que contengan la palabra "dog" o "cat" en su descripción.
@@ -132,14 +134,14 @@ SELECT title
 	FROM film
 	WHERE description REGEXP 'dog|cat';
 
--- 15. Hay algún actor o actriz que no apareca en ninguna película en la tabla film_actor.
+-- 15. Hay algún actor o actriz que no aparezca en ninguna película en la tabla film_actor.
 	-- tabla actor: first_name, last_name
 	-- tabla film: title, flim_id
     
 SELECT a.first_name AS nombre, a.last_name AS apellido
 	FROM actor AS a
 	LEFT JOIN film_actor AS fa 
-    USING (actor_id)
+		USING (actor_id)
 	WHERE fa.film_id IS NULL;
 
 -- 16. Encuentra el título de todas las películas que fueron lanzadas entre el año 2005 y 2010.
@@ -176,10 +178,68 @@ SELECT first_name AS nombre, last_name AS apellido
 
 -- 19. Encuentra el título de todas las películas que son "R" y tienen una duración mayor a 2 horas en la tabla film.
 SELECT *
-FROM film;
+	FROM film;
 
 SELECT title AS películas, length AS duración
-FROM film
-WHERE rating = 'R' AND length > 120; 
+	FROM film
+	WHERE rating = 'R' AND length > 120; 
 
--- 20. Encuentra las categorías de películas que tienen un promedio de duración superior a 120 minutos y muestra el nombre de la categoría junto con el promedio de duración.
+/* 20. Encuentra las categorías de películas que tienen un promedio de duración superior a 120 minutos 
+y muestra el nombre de la categoría junto con el promedio de duración. */
+	-- Tabla category: name, category_id
+    -- Tabla film: duration, film_id
+	-- Tabla film_category: category_id, film_id
+
+SELECT c.name AS categoría, AVG(f.length) AS promedio_duración
+	FROM category AS c
+	INNER JOIN film_category AS fc 
+		USING (category_id)
+	INNER JOIN film AS f 
+		USING (film_id)
+	GROUP BY c.name
+	HAVING AVG(f.length) > 120;
+
+/* 21. Encuentra los actores que han actuado en al menos 5 películas y muestra el nombre del actor junto con la cantidad 
+de películas en las que han actuado. */
+	-- Tabla actor: firts_name, actor_id
+	-- Tabla film_actor: film_id, actor_id
+
+SELECT a.first_name AS nombre, COUNT(fa.film_id) AS "T. películas"
+	FROM actor AS a
+	INNER JOIN film_actor AS fa 
+		USING (actor_id)
+	GROUP BY a.actor_id, a.first_name
+	HAVING COUNT(fa.film_id) >= 5;
+
+/* 22. Encuentra el título de todas las películas que fueron alquiladas por más de 5 días. Utiliza una subconsulta para 
+encontrar los rental_ids con una duración superior a 5 días y luego selecciona las películas correspondientes. */
+	-- Tabla inventory: film_id, inventory_id
+    -- Tabla film: title, film_id
+	-- Tabla rental: inventory_id, return_date
+
+SELECT f.title AS Películas
+	FROM film AS f
+	WHERE f.film_id IN (SELECT i.film_id
+							FROM rental AS r
+							INNER JOIN inventory AS i 
+								USING (inventory_id)
+							WHERE r.return_date - r.rental_date > 5);
+
+/* 23. Encuentra el nombre y apellido de los actores que no han actuado en ninguna película de la categoría "Horror". 
+Utiliza una subconsulta para encontrar los actores que han actuado en películas de la categoría "Horror" y luego exclúyelos 
+de la lista de actores. */
+	-- Tabla actor: first_name, last_name, actor_id 
+    -- Tabla film_actor: actor_id, film_id
+	-- Tabla film_category: film_id, category_id
+    -- Tabla category: category_id
+    
+SELECT first_name AS nombre, last_name AS apellido
+	FROM actor
+	WHERE actor_id NOT IN (SELECT fa.actor_id
+							FROM film_actor AS fa
+							JOIN film_category AS fc ON fa.film_id = fc.film_id
+							WHERE fc.category_id = (SELECT category_id
+														FROM category
+														WHERE name = 'Horror'));
+
+
