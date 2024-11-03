@@ -169,11 +169,12 @@ SELECT title AS películas
 	WHERE release_year BETWEEN 2005 AND 2010;
 
 -- 17. Encuentra el título de todas las películas que son de la misma categoría que "Family".
-	-- Tabla film: title, film_id
-    -- Tabla film_category: film_id, category_id
-    -- Tabla category: name, category_id
+	-- tabla film: title, film_id
+    -- tabla film_category: film_id, category_id
+    -- tabla category: name, category_id
     
-SELECT f.title AS películas
+    -- Acá el nombre de la categoría "Family" está en "category"
+SELECT f.title AS películas, c.name AS categoría
 	FROM film AS f
 	INNER JOIN film_category fc 
 		USING (film_id)
@@ -182,8 +183,11 @@ SELECT f.title AS películas
 	WHERE c.name = 'Family';
 
 -- 18. Muestra el nombre y apellido de los actores que aparecen en más de 10 películas.
-	-- Tabla actor: first_name, last_name, actor_id 
-    -- Tabla film_actor: actor_id
+	-- tabla actor: first_name, last_name, actor_id 
+    -- tabla film_actor: actor_id
+    
+    -- En la consulta busco los nombres y apellidos de los actores que cumplen una condición basada en su actor_id
+    -- En la subconsulta busco identificar a los actores que han aparecido en más de 10 películas.
 
 SELECT first_name AS nombre, last_name AS apellido
 	FROM actor
@@ -202,9 +206,14 @@ SELECT title AS películas, length AS duración
 
 /* 20. Encuentra las categorías de películas que tienen un promedio de duración superior a 120 minutos 
 y muestra el nombre de la categoría junto con el promedio de duración. */
-	-- Tabla category: name, category_id
-    -- Tabla film: duration, film_id
-	-- Tabla film_category: category_id, film_id
+	-- tabla category: name, category_id
+    -- tabla film_category: category_id, film_id
+    -- tabla film: duration, film_id
+
+-- Tabla category: Contiene información de las categorías de películas, el nombre de la categoría (name) y su identificador único (category_id).
+-- Tabla film_category: Relaciona las películas con sus categorías. Contiene category_id (vincula con la tabla category) y film_id (que vincula con la tabla film).
+-- Tabla film: Contiene duración (length) y su identificador (film_id).	
+-- El Having me está filtrando las categorías para mostrar únicamente las que el promedio de duración, de las películas, es superior a 120 minutos
 
 SELECT c.name AS categoría, AVG(f.length) AS promedio_duración
 	FROM category AS c
@@ -217,22 +226,31 @@ SELECT c.name AS categoría, AVG(f.length) AS promedio_duración
 
 /* 21. Encuentra los actores que han actuado en al menos 5 películas y muestra el nombre del actor junto con la cantidad 
 de películas en las que han actuado. */
-	-- Tabla actor: firts_name, actor_id
-	-- Tabla film_actor: film_id, actor_id
+	-- tabla actor: firts_name, actor_id
+	-- tabla film_actor: film_id, actor_id
 
+	-- Esta unión conecta la tabla actor con la tabla film_actor usando el actor_id, para acceder a todas las películas en las que ha actuado cada actor
+    -- Agrupo porque quiero contar cuántas películas ha actuado cada actor, y sin la agrupación, el conteo incluiría todas las filas en la tabla
+    
 SELECT a.first_name AS nombre, COUNT(fa.film_id) AS "T. películas"
 	FROM actor AS a
 	INNER JOIN film_actor AS fa 
 		USING (actor_id)
-	GROUP BY a.actor_id, a.first_name
+	GROUP BY a.actor_id
 	HAVING COUNT(fa.film_id) >= 5;
 
 /* 22. Encuentra el título de todas las películas que fueron alquiladas por más de 5 días. Utiliza una subconsulta para 
 encontrar los rental_ids con una duración superior a 5 días y luego selecciona las películas correspondientes. */
-	-- Tabla inventory: film_id, inventory_id
-    -- Tabla film: title, film_id
-	-- Tabla rental: inventory_id, return_date
+    -- tabla film: title, film_id
+    -- tabla inventory: film_id, inventory_id
+	-- tabla rental: inventory_id, return_date
 
+	-- En la consulta estoy buscando el título de todas las películas de la tabla film.
+    -- En la subconsulta busco los film_id de las películas que han sido alquiladas durante más de 5 días.
+    -- En la condición WHERE verifico que la diferencia entre la fecha de devolución (return_date) y la fecha de alquiler (rental_date) sea mayor a 5 días
+    -- Resto las fechas: calculo cuántos días han pasado entre la fecha en que se alquiló una película (r.rental_date) y la fecha en que se devolvió (r.return_date).
+    -- Solo los inventory_id de los alquileres que cumplen esta condición serán seleccionados.
+    
 SELECT f.title AS Películas
 	FROM film AS f
 	WHERE f.film_id IN (SELECT i.film_id
@@ -244,16 +262,22 @@ SELECT f.title AS Películas
 /* 23. Encuentra el nombre y apellido de los actores que no han actuado en ninguna película de la categoría "Horror". 
 Utiliza una subconsulta para encontrar los actores que han actuado en películas de la categoría "Horror" y luego exclúyelos 
 de la lista de actores. */
-	-- Tabla actor: first_name, last_name, actor_id 
-    -- Tabla film_actor: actor_id, film_id
-	-- Tabla film_category: film_id, category_id
-    -- Tabla category: category_id
+	-- tabla actor: first_name, last_name, actor_id 
+    -- tabla film_actor: actor_id, film_id
+	-- tabla film_category: film_id, category_id
+    -- tabla category: category_id
+    
+    -- En la consulta principal busco el nombre y apellido de los actores en la tabla actor.
+    -- La cláusula WHERE actor_id NOT IN (subconsulta) me filtra los resultados para incluir solo aquellos actores que su actor_id no está en el conjunto que me devuelve la subconsulta
+    -- Subconsulta 1: Busco los actor_id de los actores que han actuado en películas de la categoría "Horror"
+    -- Subconsulta 2: Busco el category_id que corresponde al nombre "Horror". Es necesario porq en la tabla film_category se utiliza el category_id para identificar las categorías
     
 SELECT first_name AS nombre, last_name AS apellido
 	FROM actor
 	WHERE actor_id NOT IN (SELECT fa.actor_id
 							FROM film_actor AS fa
-							JOIN film_category AS fc ON fa.film_id = fc.film_id
+							JOIN film_category AS fc
+                            USING (film_id)
 							WHERE fc.category_id = (SELECT category_id
 														FROM category
 														WHERE name = 'Horror'));
