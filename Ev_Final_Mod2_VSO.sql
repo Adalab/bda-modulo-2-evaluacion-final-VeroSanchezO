@@ -6,7 +6,7 @@ USE sakila;
 SELECT *
 	FROM film;
 
-	--  NOTA: Acá uso DISTINCT porq se utiliza para seleccionar valores únicos de la columna específicada
+	-- Acá uso DISTINCT porq se utiliza para seleccionar valores únicos de la columna específicada
 SELECT DISTINCT title AS películas
 	FROM film;  
 
@@ -14,7 +14,7 @@ SELECT DISTINCT title AS películas
 SELECT *
 	FROM film;
 
-	-- NOTA: Filtré la condición específicada en un WHERE
+	-- Filtré la condición específicada en un WHERE
 SELECT title AS películas, rating AS clasificación
 	FROM film
 	WHERE rating = 'PG-13';
@@ -22,6 +22,7 @@ SELECT title AS películas, rating AS clasificación
 -- 3. Encuentra el título y la descripción de todas las películas que contengan la palabra "amazing" en su descripción.
 SELECT *
 	FROM film;
+    
 	-- Usé Like, porqué necesitaba buscar un patrón específico en una cadena de texto
 SELECT title AS películas, description AS descripción
 	FROM film 
@@ -47,8 +48,8 @@ SELECT *
 	FROM actor;
 
 SELECT first_name AS nombre, last_name AS apellido
-FROM actor
-WHERE last_name LIKE "Gibson";
+	FROM actor
+	WHERE last_name LIKE "Gibson";
 
 -- 7. Encuentra los nombres de los actores que tengan un actor_id entre 10 y 20.
 SELECT *
@@ -70,16 +71,17 @@ SELECT title AS películas, rating AS clasificación
 SELECT *
 	FROM film;
     
-    -- NOTA: acá el count me permite contar las filas de la agrupación que hice con rating
+    -- Agrupé la clasificación, y que me contara (count) el número total de filas, en este caso: películas
 SELECT rating AS clasificación, COUNT(*) AS total_peliculas
 	FROM film
 	GROUP BY rating;
  
 -- 10. Encuentra la cantidad total de películas alquiladas por cada cliente y muestra el ID del cliente, su nombre y apellido junto con la cantidad de películas alquiladas.
-	-- tabla customer: id_customer, first_name y last_name
-	-- tabla rental: rental_id
-/* NOTA: El count lo utilizo para contar solo las filas donde hay un alquiler. 
-INNER JOIN para unir customer y rental y asegurarme que solo me incluya los clientes que tienen al menos un alquiler en la tabla rental*/
+	-- tabla customer: customer_id, first_name y last_name
+	-- tabla rental: rental_id, customer_id
+/* El count: para contar cuántas películas (alquileres) hay asociadas con cada cliente 
+INNER JOIN para unir customer y rental y asegurarme que solo me incluya los clientes que tienen al menos un alquiler en la tabla rental
+Agrupo por el ID del cliente, ya que este es único para cada cliente */
 
 SELECT c.customer_id AS id_cliente, c.first_name AS nombre, c.last_name AS apellido, COUNT(r.rental_id) AS "T. películas alquiladas"
 	FROM customer AS c
@@ -89,11 +91,17 @@ SELECT c.customer_id AS id_cliente, c.first_name AS nombre, c.last_name AS apell
     
 -- 11. Encuentra la cantidad total de películas alquiladas por categoría y muestra el nombre de la categoría junto con el recuento de alquileres.
 	-- tabla category: name, category_id
+    -- tabla film_category: category_id, film_id
+    -- tabla inventory: film_id, inventory_id
     -- tabla rental: rental_id, inventory_id
-    -- Tabla film_category: category_id, film_id
-    -- Tabla inventory: film_id, inventory_id
+    
+	-- INNER JOIN 1: category se une a film_category para obtener qué categorías están asociadas con qué películas
+	-- INNER JOIN 2: film_category con inventory, usando film_id, para acceder a las copias de esas películas en el inventario.
+	-- INNER JOIN 3: inventory se une a rental para contar cuántas veces se han alquilado esas películas.
+    -- Group By: Agrupé por "nombre categoria" para poder usar COUNT y poder contar cuántos alquileres hay en cada grupo.
+	-- Count me está contando el número total de alquileres para cada categoría de película
 
-SELECT c.name AS nombre_categoria, COUNT(r.rental_id) AS "recuento_alquileres"
+SELECT c.name AS "nombre categoria", COUNT(r.rental_id) AS "recuento alquileres"
 	FROM category AS c
 		INNER JOIN film_category AS fc
 			USING(category_id)
@@ -115,9 +123,13 @@ SELECT rating AS clasificación, AVG(length) AS "promedio duración"
 
 -- 13. Encuentra el nombre y apellido de los actores que aparecen en la película con title "Indian Love".
 	-- tabla actor: first_name, last_name, actor_id
+    -- tabla film_actor: actor_id, film_id
 	-- tabla film: title, flim_id
-	-- Tabla film_actor: actor_id, film_id
-
+	
+    -- INNER 1: actor y film_actor para que me de una lista de actores que están en cualquier película.
+	-- INNER 2: film_actor con film para acceder a la información de las películas en las que aparecen esos actores.
+    -- La tabla film_actor es clave porque actúa como un vínculo entre actores y películas.
+    
 SELECT a.first_name AS nombre, a.last_name AS apellido
 	FROM actor AS a
 	INNER JOIN film_actor AS fa 
@@ -127,6 +139,7 @@ SELECT a.first_name AS nombre, a.last_name AS apellido
 	WHERE f.title = 'Indian Love';
 
 -- 14. Muestra el título de todas las películas que contengan la palabra "dog" o "cat" en su descripción.
+	-- con REGEXP 'dog|cat', estoy indcando que quiero encontrar cualquier texto que contenga "dog" o "cat".
 SELECT *
 	FROM film;
     
@@ -135,8 +148,11 @@ SELECT title
 	WHERE description REGEXP 'dog|cat';
 
 -- 15. Hay algún actor o actriz que no aparezca en ninguna película en la tabla film_actor.
-	-- tabla actor: first_name, last_name
-	-- tabla film: title, flim_id
+	-- tabla actor: first_name, last_name, actor_id
+	-- tabla film_actor: title, film_id, actor_id
+    
+    /* El LEFT JOIN me muestra todos los registros de la tabla actor (la tabla de la izquierda), incluso si no hay coincidencias en la tabla 
+    film_actor (la tabla de la derecha). Esto es por si un actor no ha aparecido en ninguna película, aún así aparecerá en el resultado de la consulta */
     
 SELECT a.first_name AS nombre, a.last_name AS apellido
 	FROM actor AS a
